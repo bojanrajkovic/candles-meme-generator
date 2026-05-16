@@ -575,7 +575,7 @@
     if (!key) return null;
     if (avatarCache.has(key)) return avatarCache.get(key);
 
-    setFetchStatus(which, `Fetching @${key} from X…`);
+    setFetchStatus(which, `Fetching @${key}…`);
     try {
       const res = await fetch(
         `https://unavatar.io/x/${encodeURIComponent(key)}?fallback=false`,
@@ -590,11 +590,11 @@
         fr.readAsDataURL(blob);
       });
       avatarCache.set(key, dataUri);
-      setFetchStatus(which, `from @${key} on X`, 'ok');
+      setFetchStatus(which, '');
       return dataUri;
     } catch (err) {
       avatarCache.set(key, null);
-      setFetchStatus(which, `couldn't find @${key} on X`, 'err');
+      setFetchStatus(which, `couldn't find @${key}`, 'err');
       return null;
     }
   }
@@ -622,7 +622,7 @@
       const fr = new FileReader();
       fr.onload = () => {
         state.uploaded[which] = fr.result;
-        setFetchStatus(which, 'using uploaded image', 'ok');
+        setFetchStatus(which, '');
         render();
       };
       fr.readAsDataURL(file);
