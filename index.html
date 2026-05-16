@@ -1,0 +1,762 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Candles Meme Generator — snowclone the dril budget</title>
+<style>
+  /* --- 2012-Twitter palette --------------------------------------------- */
+  :root {
+    --tw-blue: #0084B4;
+    --tw-blue-hover: #006a90;
+    --tw-link: #1389ec;
+    --tw-bg: #C0DEED;
+    --tw-card: #ffffff;
+    --tw-border: #e6e6e6;
+    --tw-border-strong: #cfd9de;
+    --tw-text: #333;
+    --tw-muted: #999;
+    --tw-red: #cc3333;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background: var(--tw-bg);
+    color: var(--tw-text);
+    font-size: 14px;
+    line-height: 1.4;
+    min-height: 100vh;
+  }
+
+  /* --- top navbar ------------------------------------------------------- */
+  .navbar {
+    background: linear-gradient(to bottom, #4892c5 0%, #2f6b8f 100%);
+    border-bottom: 1px solid #1d567c;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+  }
+  .navbar-inner {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    color: #fff;
+  }
+  .bird {
+    width: 32px; height: 32px;
+    background: #fff;
+    border-radius: 4px;
+    display: grid; place-items: center;
+    color: var(--tw-blue);
+    font-weight: 700;
+    box-shadow: inset 0 -1px 0 rgba(0,0,0,0.15);
+  }
+  .nav-title {
+    font-size: 18px;
+    font-weight: 700;
+    text-shadow: 0 -1px 0 rgba(0,0,0,0.25);
+  }
+  .nav-sub {
+    font-size: 12px;
+    color: #d4e6f4;
+    text-shadow: 0 -1px 0 rgba(0,0,0,0.25);
+    margin-left: auto;
+  }
+  .nav-sub a {
+    color: #fff;
+    text-decoration: underline;
+  }
+
+  /* --- page layout ------------------------------------------------------ */
+  .wrap {
+    max-width: 980px;
+    margin: 18px auto;
+    padding: 0 16px 40px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  @media (max-width: 820px) {
+    .wrap { grid-template-columns: 1fr; }
+  }
+
+  /* --- card chrome ------------------------------------------------------ */
+  .card {
+    background: var(--tw-card);
+    border: 1px solid var(--tw-border-strong);
+    border-radius: 6px;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.05);
+  }
+  .card-head {
+    background: linear-gradient(to bottom, #f7f7f7 0%, #ededed 100%);
+    border-bottom: 1px solid var(--tw-border);
+    padding: 8px 12px;
+    font-weight: 700;
+    color: #555;
+    font-size: 13px;
+    border-radius: 6px 6px 0 0;
+  }
+  .card-body { padding: 12px; }
+
+  /* --- form widgets ----------------------------------------------------- */
+  .group { margin-bottom: 14px; }
+  .group:last-child { margin-bottom: 0; }
+  .group h3 {
+    margin: 0 0 8px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--tw-blue);
+    border-bottom: 1px solid var(--tw-border);
+    padding-bottom: 4px;
+  }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 6px; }
+  .row.single { grid-template-columns: 1fr; }
+  label {
+    display: block;
+    font-size: 11px;
+    color: #666;
+    margin-bottom: 2px;
+    font-weight: 700;
+  }
+  input[type=text], textarea {
+    width: 100%;
+    border: 1px solid #c0c0c0;
+    border-top-color: #999;
+    border-radius: 3px;
+    padding: 5px 7px;
+    font: inherit;
+    font-size: 13px;
+    background: #fff;
+    box-shadow: inset 0 1px 1px rgba(0,0,0,0.06);
+  }
+  input[type=text]:focus, textarea:focus {
+    outline: none;
+    border-color: var(--tw-blue);
+    box-shadow: 0 0 4px rgba(0,132,180,0.45);
+  }
+  textarea { resize: vertical; min-height: 50px; }
+  .avatar-pick {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 6px;
+  }
+  .avatar-pick .preview {
+    width: 38px; height: 38px;
+    border: 1px solid var(--tw-border-strong);
+    background: #f0f0f0;
+    overflow: hidden;
+  }
+  .avatar-pick .preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .file-btn {
+    display: inline-block;
+    background: linear-gradient(to bottom, #fefefe 0%, #e0e0e0 100%);
+    border: 1px solid #b0b0b0;
+    border-radius: 3px;
+    padding: 4px 10px;
+    font-size: 12px;
+    color: #333;
+    cursor: pointer;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.6);
+  }
+  .file-btn:hover { background: linear-gradient(to bottom, #fff 0%, #ddd 100%); }
+  .file-btn input { display: none; }
+  .hint { font-size: 11px; color: var(--tw-muted); margin-top: 2px; }
+  .hint-inline { font-weight: 400; color: var(--tw-muted); font-size: 10px; }
+  .fetch-status { font-size: 11px; color: var(--tw-muted); margin-left: auto; }
+  .fetch-status.ok { color: #1a7a3a; }
+  .fetch-status.err { color: var(--tw-red); }
+
+  /* --- big blue tweet button -------------------------------------------- */
+  .btn-tweet {
+    display: inline-block;
+    background: linear-gradient(to bottom, #1c95d3 0%, #006a90 100%);
+    border: 1px solid #005d80;
+    color: #fff;
+    text-shadow: 0 -1px 0 rgba(0,0,0,0.3);
+    font-weight: 700;
+    font-size: 14px;
+    padding: 7px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+  .btn-tweet:hover { background: linear-gradient(to bottom, #28a3dd 0%, #00759f 100%); }
+  .btn-tweet:active { box-shadow: inset 0 1px 3px rgba(0,0,0,0.4); }
+  .btn-tweet[disabled] { opacity: 0.6; cursor: wait; }
+
+  .btn-row {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .btn-ghost {
+    background: linear-gradient(to bottom, #fefefe 0%, #dcdcdc 100%);
+    border: 1px solid #b0b0b0;
+    border-radius: 3px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 12px;
+    color: #333;
+  }
+
+  /* --- preview pane ----------------------------------------------------- */
+  .preview-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  /* The capture target — fixed width matches the reference screenshot */
+  #thread {
+    width: 507px;
+    background: #fff;
+    border: 1px solid var(--tw-border-strong);
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: var(--tw-text);
+  }
+
+  .tweet {
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 10px;
+    padding: 10px 12px 8px;
+    border-bottom: 1px solid var(--tw-border);
+    position: relative;
+  }
+  .tweet:last-child { border-bottom: none; }
+  .tweet .avatar {
+    width: 48px; height: 48px;
+    background: #f0f0f0;
+    overflow: hidden;
+  }
+  .tweet .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .tweet .head {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .tweet .displayname {
+    color: #222;
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .tweet .handle {
+    color: #8899a6;
+    font-weight: 400;
+    font-size: 13px;
+  }
+  .tweet .date {
+    margin-left: auto;
+    color: var(--tw-muted);
+    font-size: 12px;
+  }
+  .tweet .body {
+    margin-top: 2px;
+    color: var(--tw-text);
+    font-size: 13.5px;
+    line-height: 1.45;
+    word-wrap: break-word;
+  }
+  .tweet .body .mention { color: var(--tw-link); }
+  .tweet .body .bold-item { font-weight: 700; }
+
+  .tweet .footer {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--tw-muted);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .tweet .footer .expand { color: var(--tw-muted); cursor: default; }
+  .tweet .footer .hide { color: var(--tw-red); cursor: default; }
+  .tweet .actions {
+    margin-left: auto;
+    display: flex;
+    gap: 14px;
+    color: var(--tw-muted);
+    font-size: 12px;
+  }
+  .tweet .actions .action {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .tweet .actions .icon {
+    display: inline-block;
+    width: 12px; height: 12px;
+    line-height: 12px;
+    text-align: center;
+    color: var(--tw-red);
+    font-weight: 700;
+  }
+
+  /* tiny "indented" feel of dril budget list */
+  .tweet .body .list-line { display: block; }
+
+  /* --- footer note ------------------------------------------------------ */
+  .note {
+    grid-column: 1 / -1;
+    margin-top: 4px;
+    text-align: center;
+    font-size: 12px;
+    color: #4a6f87;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.6);
+  }
+  .note a { color: #1d567c; }
+
+  /* --- mini watermark in download (no — we don't want one) -------------- */
+</style>
+</head>
+<body>
+
+<header class="navbar">
+  <div class="navbar-inner">
+    <div class="bird" aria-hidden="true">t</div>
+    <div class="nav-title">Candles Meme Generator</div>
+    <div class="nav-sub">snowclone the famous budget tweet · <a href="#" id="reset-link">reset</a></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- ============================== EDITOR ============================== -->
+  <section class="card" aria-label="Editor">
+    <div class="card-head">Compose</div>
+    <div class="card-body">
+
+      <!-- Tweet 1 -->
+      <div class="group" data-tweet="1">
+        <h3>Tweet 1 — the budget</h3>
+        <div class="avatar-pick">
+          <div class="preview"><img id="avatar1-img" alt="" /></div>
+          <label class="file-btn">
+            Choose avatar
+            <input type="file" accept="image/*" data-avatar-for="1" />
+          </label>
+          <span class="fetch-status" id="fetch-status-1"></span>
+        </div>
+        <div class="row">
+          <div>
+            <label for="displayname1">Display name</label>
+            <input type="text" id="displayname1" value="wint" />
+          </div>
+          <div>
+            <label for="handle1">@handle <span class="hint-inline">(auto-fetches avatar)</span></label>
+            <input type="text" id="handle1" value="dril" />
+          </div>
+        </div>
+        <div class="row single">
+          <div>
+            <label for="item">Item (replaces "Candles")</label>
+            <input type="text" id="item" value="Candles" />
+            <div class="hint">Price stays $3,600 — that's the joke.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tweet 2 -->
+      <div class="group" data-tweet="2">
+        <h3>Tweet 2 — the unhelpful advice</h3>
+        <div class="avatar-pick">
+          <div class="preview"><img id="avatar2-img" alt="" /></div>
+          <label class="file-btn">
+            Choose avatar
+            <input type="file" accept="image/*" data-avatar-for="2" />
+          </label>
+          <span class="fetch-status" id="fetch-status-2"></span>
+        </div>
+        <div class="row">
+          <div>
+            <label for="displayname2">Display name</label>
+            <input type="text" id="displayname2" value="craig" />
+          </div>
+          <div>
+            <label for="handle2">@handle <span class="hint-inline">(auto-fetches avatar)</span></label>
+            <input type="text" id="handle2" value="craigus12" />
+          </div>
+        </div>
+        <div class="hint">Reply auto-fills as <em>"@&lt;you&gt; spend less on &lt;item&gt;"</em>.</div>
+      </div>
+
+      <!-- Tweet 3 -->
+      <div class="group" data-tweet="3">
+        <h3>Tweet 3 — the comeback</h3>
+        <div class="avatar-pick">
+          <div class="preview"><img id="avatar3-img" alt="" /></div>
+          <label class="file-btn">
+            Choose avatar
+            <input type="file" accept="image/*" data-avatar-for="3" />
+          </label>
+          <span class="fetch-status" id="fetch-status-3"></span>
+        </div>
+        <div class="row">
+          <div>
+            <label for="displayname3">Display name</label>
+            <input type="text" id="displayname3" value="wint" />
+          </div>
+          <div>
+            <label for="handle3">@handle</label>
+            <input type="text" id="handle3" value="dril" />
+          </div>
+        </div>
+        <div class="hint">Same poster as T1 by default. Comeback is always the canonical <em>"no"</em>.</div>
+      </div>
+
+      <div class="btn-row">
+        <button id="download" class="btn-tweet" type="button">Download PNG</button>
+        <button id="copy-clip" class="btn-ghost" type="button">Copy to clipboard</button>
+        <span id="status" class="hint" role="status" aria-live="polite"></span>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================== PREVIEW ============================= -->
+  <section class="card preview-wrap" aria-label="Preview">
+    <div class="card-head" style="width:100%;">Live preview</div>
+    <div class="card-body" style="width:100%; display:flex; flex-direction:column; align-items:center; gap:10px;">
+      <div id="thread">
+
+        <!-- Tweet 1 — the budget -->
+        <article class="tweet">
+          <div class="avatar"><img id="t1-avatar" alt="" /></div>
+          <div>
+            <div class="head">
+              <span class="displayname" id="t1-displayname">wint</span>
+              <span class="handle">@<span id="t1-handle">dril</span></span>
+              <span class="date" id="t1-date">29 Sep</span>
+            </div>
+            <div class="body" id="t1-body"></div>
+            <div class="footer">
+              <span class="expand">Expand</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Tweet 2 — the helpful reply -->
+        <article class="tweet">
+          <div class="avatar"><img id="t2-avatar" alt="" /></div>
+          <div>
+            <div class="head">
+              <span class="displayname" id="t2-displayname">craig</span>
+              <span class="handle">@<span id="t2-handle">craigus12</span></span>
+              <span class="date" id="t2-date">29 Sep</span>
+            </div>
+            <div class="body" id="t2-body"></div>
+            <div class="footer">
+              <span class="expand">Expand</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Tweet 3 — the comeback (with action row) -->
+        <article class="tweet">
+          <div class="avatar"><img id="t3-avatar" alt="" /></div>
+          <div>
+            <div class="head">
+              <span class="displayname" id="t3-displayname">wint</span>
+              <span class="handle">@<span id="t3-handle">dril</span></span>
+              <span class="date" id="t3-date">29 Sep</span>
+            </div>
+            <div class="body" id="t3-body"></div>
+            <div class="footer">
+              <span class="hide">&#9660; Hide conversation</span>
+              <span class="actions">
+                <span class="action"><span class="icon">&#x21A9;</span>Reply</span>
+                <span class="action"><span class="icon">&#x21BB;</span>Retweet</span>
+                <span class="action"><span class="icon">&#9733;</span>Favorite</span>
+                <span class="action"><span class="icon">&#8230;</span>More</span>
+              </span>
+            </div>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <p class="note">
+    A loving tribute to <a href="https://x.com/dril/status/384408932061417472?lang=en" target="_blank" rel="noopener noreferrer">@dril</a>'s budget post. PNG export keeps the exact pixel layout shown above.
+  </p>
+</main>
+
+<!-- html-to-image (UMD) — exposes window.htmlToImage -->
+<script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.13/dist/html-to-image.js"></script>
+
+<script>
+(() => {
+  // ---------- placeholder avatar (gray silhouette as data URI) ----------
+  const PLACEHOLDER = (label = "") => {
+    const initial = (label || "?").trim().charAt(0).toUpperCase() || "?";
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">
+      <rect width="96" height="96" fill="#cfd9de"/>
+      <circle cx="48" cy="38" r="18" fill="#8899a6"/>
+      <ellipse cx="48" cy="92" rx="30" ry="26" fill="#8899a6"/>
+      <text x="48" y="58" text-anchor="middle" font-family="Helvetica,Arial,sans-serif"
+            font-size="34" font-weight="700" fill="#ffffff" opacity="0.85">${initial}</text>
+    </svg>`;
+    return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
+  };
+
+  // ---------- state ------------------------------------------------------
+  // uploaded[] wins over fetched[] wins over placeholder.
+  const state = {
+    uploaded: { 1: null, 2: null, 3: null }, // user-picked files (data URIs)
+    fetched:  { 1: null, 2: null, 3: null }, // auto-pulled from X (data URIs)
+  };
+  // Cache so retyping a handle we already looked up doesn't refetch.
+  const avatarCache = new Map(); // lowercase handle -> data URI or null (404)
+  const debounceTimers = new Map(); // tweet index -> setTimeout id
+
+  // ---------- helpers ----------------------------------------------------
+  const $ = sel => document.querySelector(sel);
+  const escapeHTML = s => String(s).replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+  }[c]));
+  // Linkify @mentions; preserve newlines the user typed.
+  const renderBody = txt => escapeHTML(txt)
+    .replace(/(^|[^\w/])@([A-Za-z0-9_]{1,30})/g,
+             (_, lead, h) => `${lead}<span class="mention">@${h}</span>`)
+    .replace(/\n/g, '<br>');
+
+  function setFetchStatus(which, text, cls) {
+    const el = document.getElementById(`fetch-status-${which}`);
+    if (!el) return;
+    el.textContent = text || '';
+    el.className = 'fetch-status' + (cls ? ' ' + cls : '');
+  }
+
+  // ---------- fetch avatar from X via unavatar.io -----------------------
+  async function fetchXAvatar(handle, which) {
+    const key = (handle || '').toLowerCase().trim().replace(/^@/, '');
+    if (!key) return null;
+    if (avatarCache.has(key)) return avatarCache.get(key);
+
+    setFetchStatus(which, `Fetching @${key} from X…`);
+    try {
+      const res = await fetch(
+        `https://unavatar.io/x/${encodeURIComponent(key)}?fallback=false`,
+        { mode: 'cors' }
+      );
+      if (!res.ok) throw new Error(`status ${res.status}`);
+      const blob = await res.blob();
+      const dataUri = await new Promise((resolve, reject) => {
+        const fr = new FileReader();
+        fr.onload  = () => resolve(fr.result);
+        fr.onerror = reject;
+        fr.readAsDataURL(blob);
+      });
+      avatarCache.set(key, dataUri);
+      setFetchStatus(which, `from @${key} on X`, 'ok');
+      return dataUri;
+    } catch (err) {
+      avatarCache.set(key, null);
+      setFetchStatus(which, `couldn't find @${key} on X`, 'err');
+      return null;
+    }
+  }
+
+  function scheduleAvatarFetch(which) {
+    if (debounceTimers.has(which)) clearTimeout(debounceTimers.get(which));
+    const handle = document.getElementById(`handle${which}`).value;
+    debounceTimers.set(which, setTimeout(async () => {
+      // Don't override a manual upload.
+      if (state.uploaded[which]) return;
+      const data = await fetchXAvatar(handle, which);
+      // Race guard: if user uploaded during the fetch, skip overwrite.
+      if (state.uploaded[which]) return;
+      state.fetched[which] = data;
+      render();
+    }, 400));
+  }
+
+  // ---------- avatar file upload ----------------------------------------
+  document.querySelectorAll('input[type=file][data-avatar-for]').forEach(input => {
+    input.addEventListener('change', e => {
+      const which = input.dataset.avatarFor;
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const fr = new FileReader();
+      fr.onload = () => {
+        state.uploaded[which] = fr.result;
+        setFetchStatus(which, 'using uploaded image', 'ok');
+        render();
+      };
+      fr.readAsDataURL(file);
+    });
+  });
+
+  // ---------- canonical constants from the original dril tweet ----------
+  // 29 Sep 2012, $3,600 — these never change. That's the joke.
+  const DRIL_DATE  = "29 Sep";
+  const DRIL_PRICE = "$3,600";
+  const DRIL_PLEA  = "someone who is good at the economy please help me budget this. my family is dying";
+
+  // ---------- the budget block (canonical Dril list) --------------------
+  function renderBudget(item) {
+    const safeItem  = escapeHTML(item || "Candles");
+    const safePrice = escapeHTML(DRIL_PRICE);
+    const safePlea  = renderBody(DRIL_PLEA);
+    return [
+      `<span class="list-line">Food $200</span>`,
+      `<span class="list-line">Data $150</span>`,
+      `<span class="list-line">Rent $800</span>`,
+      `<span class="list-line"><span class="bold-item">${safeItem}</span> ${safePrice}</span>`,
+      `<span class="list-line">Utility $150</span>`,
+      `<span class="list-line">${safePlea}</span>`,
+    ].join("");
+  }
+
+  // ---------- render the whole preview ----------------------------------
+  function avatarFor(which, fallbackLabel) {
+    return state.uploaded[which]
+        || state.fetched[which]
+        || (which === 3 ? (state.uploaded[1] || state.fetched[1]) : null)
+        || PLACEHOLDER(fallbackLabel);
+  }
+
+  function render() {
+    const dn1 = ($('#displayname1').value || "").trim() || "you";
+    const dn2 = ($('#displayname2').value || "").trim() || "friend";
+    const dn3 = ($('#displayname3').value || "").trim() || dn1;
+    const h1  = ($('#handle1').value || "").trim().replace(/^@/, '') || "you";
+    const h2  = ($('#handle2').value || "").trim().replace(/^@/, '') || "friend";
+    const h3  = ($('#handle3').value || "").trim().replace(/^@/, '') || h1;
+    const item = $('#item').value || "Candles";
+
+    // Tweet 1 — the budget
+    $('#t1-displayname').textContent = dn1;
+    $('#t1-handle').textContent = h1;
+    $('#t1-date').textContent = DRIL_DATE;
+    $('#t1-body').innerHTML = renderBudget(item);
+    const a1 = avatarFor(1, dn1);
+    $('#t1-avatar').src = a1;
+    $('#avatar1-img').src = a1;
+
+    // Tweet 2 — auto-composed advice
+    $('#t2-displayname').textContent = dn2;
+    $('#t2-handle').textContent = h2;
+    $('#t2-date').textContent = DRIL_DATE;
+    $('#t2-body').innerHTML = renderBody(`@${h1} spend less on ${item.toLowerCase()}`);
+    const a2 = avatarFor(2, dn2);
+    $('#t2-avatar').src = a2;
+    $('#avatar2-img').src = a2;
+
+    // Tweet 3 — the canonical "no"
+    $('#t3-displayname').textContent = dn3;
+    $('#t3-handle').textContent = h3;
+    $('#t3-date').textContent = DRIL_DATE;
+    $('#t3-body').innerHTML = renderBody(`@${h2} no`);
+    const a3 = avatarFor(3, dn3);
+    $('#t3-avatar').src = a3;
+    $('#avatar3-img').src = a3;
+  }
+
+  // Wire every text/textarea input to re-render live.
+  document.querySelectorAll('input[type=text], textarea').forEach(el => {
+    el.addEventListener('input', render);
+  });
+
+  // Handle-name inputs additionally trigger debounced avatar fetch.
+  [1, 2, 3].forEach(which => {
+    const el = document.getElementById(`handle${which}`);
+    el.addEventListener('input', () => {
+      // A new handle invalidates any previously-fetched avatar.
+      state.fetched[which] = null;
+      scheduleAvatarFetch(which);
+    });
+  });
+
+  // ---------- reset ------------------------------------------------------
+  $('#reset-link').addEventListener('click', e => {
+    e.preventDefault();
+    if (!confirm('Reset all fields back to the canonical dril original?')) return;
+    state.uploaded = { 1: null, 2: null, 3: null };
+    state.fetched  = { 1: null, 2: null, 3: null };
+    document.querySelectorAll('input[type=file]').forEach(i => i.value = '');
+    [1,2,3].forEach(w => setFetchStatus(w, ''));
+    const defaults = {
+      displayname1:'wint', handle1:'dril',
+      item:'Candles',
+      displayname2:'craig', handle2:'craigus12',
+      displayname3:'wint', handle3:'dril',
+    };
+    Object.entries(defaults).forEach(([k,v]) => { const el = document.getElementById(k); if (el) el.value = v; });
+    render();
+    [1,2,3].forEach(scheduleAvatarFetch);
+  });
+
+  // ---------- export -----------------------------------------------------
+  const statusEl = $('#status');
+  function setStatus(msg, isErr) {
+    statusEl.textContent = msg || '';
+    statusEl.style.color = isErr ? 'var(--tw-red)' : 'var(--tw-muted)';
+  }
+
+  async function exportPng() {
+    if (!window.htmlToImage) {
+      setStatus('Exporter still loading — try again in a sec.', true);
+      return;
+    }
+    const node = document.getElementById('thread');
+    // Render at 2x for crisp output
+    return await window.htmlToImage.toPng(node, {
+      pixelRatio: 2,
+      backgroundColor: '#ffffff',
+      cacheBust: true,
+    });
+  }
+
+  $('#download').addEventListener('click', async () => {
+    const btn = $('#download');
+    btn.disabled = true; setStatus('Rendering…');
+    try {
+      const url = await exportPng();
+      const a = document.createElement('a');
+      const slug = ($('#item').value || 'candles').toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'meme';
+      a.download = `dril-budget-${slug}.png`;
+      a.href = url;
+      document.body.appendChild(a); a.click(); a.remove();
+      setStatus('Saved.');
+    } catch (err) {
+      console.error(err);
+      setStatus('Render failed — check console.', true);
+    } finally {
+      btn.disabled = false;
+      setTimeout(() => setStatus(''), 2500);
+    }
+  });
+
+  $('#copy-clip').addEventListener('click', async () => {
+    const btn = $('#copy-clip');
+    btn.disabled = true; setStatus('Rendering for clipboard…');
+    try {
+      if (!navigator.clipboard || !window.ClipboardItem) {
+        throw new Error('Clipboard image copy not supported in this browser.');
+      }
+      const dataUrl = await exportPng();
+      const blob = await (await fetch(dataUrl)).blob();
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      setStatus('Copied PNG to clipboard.');
+    } catch (err) {
+      console.error(err);
+      setStatus(err.message || 'Copy failed.', true);
+    } finally {
+      btn.disabled = false;
+      setTimeout(() => setStatus(''), 3000);
+    }
+  });
+
+  // ---------- initial paint + prefetch ----------------------------------
+  render();
+  [1, 2, 3].forEach(scheduleAvatarFetch);
+})();
+</script>
+</body>
+</html>
