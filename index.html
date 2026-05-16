@@ -412,7 +412,8 @@
 
       <div class="btn-row">
         <button id="download" class="btn-tweet" type="button">Download PNG</button>
-        <button id="copy-clip" class="btn-ghost" type="button">Copy to clipboard</button>
+        <button id="copy-clip" class="btn-ghost" type="button">Copy PNG</button>
+        <button id="copy-link" class="btn-ghost" type="button">Copy share link</button>
         <span id="status" class="hint" role="status" aria-live="polite"></span>
       </div>
 
@@ -599,6 +600,49 @@
   const DRIL_DATE = "29 Sep";
   const DRIL_PLEA = "someone who is good at the economy please help me budget this. my family is dying";
 
+  // ---------- default values for each editable field --------------------
+  // Used by reset(), URL load/save, and default-suppression in the share link.
+  const DEFAULTS = {
+    displayname1: 'wint', handle1: 'dril',
+    item: 'Candles',     price: '$3,600',
+    displayname2: 'craig', handle2: 'craigus12',
+    displayname3: 'wint',  handle3: 'dril',
+  };
+
+  // ---------- URL <-> form state ----------------------------------------
+  // We use query-string params (not hash) so links are human-readable and
+  // chat-app unfurlers display them cleanly. Defaults are suppressed so the
+  // URL only carries what the user actually changed.
+  function readURLState() {
+    const params = new URLSearchParams(window.location.search);
+    Object.keys(DEFAULTS).forEach(key => {
+      if (!params.has(key)) return;
+      const el = document.getElementById(key);
+      if (el) el.value = params.get(key);
+    });
+  }
+
+  function updateURL() {
+    const params = new URLSearchParams();
+    Object.entries(DEFAULTS).forEach(([key, defaultVal]) => {
+      const el = document.getElementById(key);
+      if (!el) return;
+      const val = el.value;
+      if (val && val !== defaultVal) params.set(key, val);
+    });
+    const qs = params.toString();
+    const newURL = qs
+      ? `${window.location.pathname}?${qs}`
+      : window.location.pathname;
+    window.history.replaceState(null, '', newURL);
+  }
+
+  let urlUpdateTimer = null;
+  function scheduleURLUpdate() {
+    if (urlUpdateTimer) clearTimeout(urlUpdateTimer);
+    urlUpdateTimer = setTimeout(updateURL, 300);
+  }
+
   // ---------- the budget block (canonical Dril list) --------------------
   function renderBudget(item, price) {
     const safeItem  = escapeHTML(item || "Candles");
@@ -659,9 +703,9 @@
     $('#avatar3-img').src = a3;
   }
 
-  // Wire every text/textarea input to re-render live.
+  // Wire every text/textarea input to re-render and update the share URL.
   document.querySelectorAll('input[type=text], textarea').forEach(el => {
-    el.addEventListener('input', render);
+    el.addEventListener('input', () => { render(); scheduleURLUpdate(); });
   });
 
   // Handle-name inputs additionally trigger debounced avatar fetch.
@@ -682,14 +726,12 @@
     state.fetched  = { 1: null, 2: null, 3: null };
     document.querySelectorAll('input[type=file]').forEach(i => i.value = '');
     [1,2,3].forEach(w => setFetchStatus(w, ''));
-    const defaults = {
-      displayname1:'wint', handle1:'dril',
-      item:'Candles', price:'$3,600',
-      displayname2:'craig', handle2:'craigus12',
-      displayname3:'wint', handle3:'dril',
-    };
-    Object.entries(defaults).forEach(([k,v]) => { const el = document.getElementById(k); if (el) el.value = v; });
+    Object.entries(DEFAULTS).forEach(([k,v]) => {
+      const el = document.getElementById(k);
+      if (el) el.value = v;
+    });
     render();
+    updateURL();
     [1,2,3].forEach(scheduleAvatarFetch);
   });
 
@@ -735,6 +777,18 @@
     }
   });
 
+  $('#copy-link').addEventListener('click', async () => {
+    updateURL(); // make sure URL reflects the current form state
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setStatus('Share link copied.');
+    } catch (err) {
+      console.error(err);
+      setStatus('Copy failed — select the URL bar manually.', true);
+    }
+    setTimeout(() => setStatus(''), 2500);
+  });
+
   $('#copy-clip').addEventListener('click', async () => {
     const btn = $('#copy-clip');
     btn.disabled = true; setStatus('Rendering for clipboard…');
@@ -756,6 +810,8 @@
   });
 
   // ---------- initial paint + prefetch ----------------------------------
+  // Hydrate fields from the URL first so we render the shared state.
+  readURLState();
   render();
   [1, 2, 3].forEach(scheduleAvatarFetch);
 })();
