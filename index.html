@@ -168,6 +168,18 @@
   .fetch-status { font-size: 11px; color: var(--tw-muted); margin-left: auto; }
   .fetch-status.ok { color: #1a7a3a; }
   .fetch-status.err { color: var(--tw-red); }
+  .clear-upload {
+    background: none;
+    border: none;
+    color: var(--tw-muted);
+    font-size: 16px;
+    line-height: 1;
+    padding: 0 4px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .clear-upload:hover { color: var(--tw-red); }
+  .clear-upload[hidden] { display: none; }
 
   /* --- big blue tweet button -------------------------------------------- */
   .btn-tweet {
@@ -338,6 +350,7 @@
             Choose avatar
             <input type="file" accept="image/*" data-avatar-for="1" />
           </label>
+          <button class="clear-upload" id="clear-upload-1" type="button" hidden title="Clear upload, use X profile pic">&times;</button>
           <span class="fetch-status" id="fetch-status-1"></span>
         </div>
         <div class="row">
@@ -371,6 +384,7 @@
             Choose avatar
             <input type="file" accept="image/*" data-avatar-for="2" />
           </label>
+          <button class="clear-upload" id="clear-upload-2" type="button" hidden title="Clear upload, use X profile pic">&times;</button>
           <span class="fetch-status" id="fetch-status-2"></span>
         </div>
         <div class="row">
@@ -395,6 +409,7 @@
             Choose avatar
             <input type="file" accept="image/*" data-avatar-for="3" />
           </label>
+          <button class="clear-upload" id="clear-upload-3" type="button" hidden title="Clear upload, use X profile pic">&times;</button>
           <span class="fetch-status" id="fetch-status-3"></span>
         </div>
         <div class="row">
@@ -595,6 +610,22 @@
     });
   });
 
+  // ---------- clear upload (the × next to each avatar) -------------------
+  [1, 2, 3].forEach(which => {
+    const btn = document.getElementById(`clear-upload-${which}`);
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      state.uploaded[which] = null;
+      // Reset the file input so re-uploading the *same* file still fires change.
+      const fileInput = document.querySelector(`input[type=file][data-avatar-for="${which}"]`);
+      if (fileInput) fileInput.value = '';
+      setFetchStatus(which, '');
+      // Fall back to a cached fetch if we have one, otherwise trigger a new fetch.
+      if (!state.fetched[which]) scheduleAvatarFetch(which);
+      render();
+    });
+  });
+
   // ---------- canonical constants from the original dril tweet ----------
   // 29 Sep 2012 — date and the closing plea never change.
   const DRIL_DATE = "29 Sep";
@@ -701,6 +732,12 @@
     const a3 = avatarFor(3, dn3);
     $('#t3-avatar').src = a3;
     $('#avatar3-img').src = a3;
+
+    // Show the × clear-upload button only when a manual upload exists.
+    [1, 2, 3].forEach(w => {
+      const btn = document.getElementById(`clear-upload-${w}`);
+      if (btn) btn.hidden = !state.uploaded[w];
+    });
   }
 
   // Wire every text/textarea input to re-render and update the share URL.
