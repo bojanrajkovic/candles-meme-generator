@@ -75,11 +75,13 @@
     margin: 18px auto;
     padding: 0 16px 40px;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    /* minmax(0, 1fr) instead of plain 1fr so the 507px #thread inside the
+       preview card can't blow the column out wider than the viewport. */
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 18px;
   }
   @media (max-width: 820px) {
-    .wrap { grid-template-columns: 1fr; }
+    .wrap { grid-template-columns: minmax(0, 1fr); }
   }
 
   /* --- card chrome ------------------------------------------------------ */
@@ -250,13 +252,26 @@
     flex-direction: column;
     align-items: center;
   }
-  /* The capture target — fixed width matches the reference screenshot */
+  /* The capture target — fixed width matches the reference screenshot.
+     On narrow viewports we don't change the layout box (export needs the
+     full 507px), but a JS-applied transform: scale() shrinks the visual.
+     .thread-frame absorbs the scaled height so siblings sit flush. */
+  .thread-frame {
+    width: 100%;
+    max-width: 507px;
+    /* overflow: hidden stops the 507px child from inflating ancestors'
+       min-content before fitThread() runs (and clips any sub-pixel bleed
+       from the scaled transform). */
+    overflow: hidden;
+    /* JS may set explicit width/height to match the scaled visual */
+  }
   #thread {
     width: 507px;
     background: #fff;
     border: 1px solid var(--tw-border-strong);
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     color: var(--tw-text);
+    transform-origin: top left;
   }
 
   .tweet {
@@ -351,6 +366,36 @@
   .note a { color: #1d567c; }
 
   /* --- mini watermark in download (no — we don't want one) -------------- */
+
+  /* --- mobile (≤540px): tap targets, no-zoom inputs, stacked rows -------- */
+  @media (max-width: 540px) {
+    .wrap { padding: 0 10px 32px; gap: 12px; margin-top: 12px; }
+    .card-body { padding: 10px; }
+    .navbar-inner { flex-wrap: wrap; padding: 8px 12px; gap: 6px 12px; }
+    .nav-title { font-size: 16px; }
+    .nav-sub { margin-left: 0; font-size: 11px; flex-basis: 100%; }
+
+    /* Stack form pairs; 1fr/1fr columns get cramped under 400px */
+    .row { grid-template-columns: 1fr; gap: 6px; }
+
+    /* 16px font on inputs prevents Safari iOS auto-zoom on focus */
+    input[type=text], textarea {
+      font-size: 16px;
+      padding: 8px 10px;
+    }
+
+    /* Bigger tap targets — Apple HIG 44pt minimum */
+    .btn-tweet { padding: 11px 18px; font-size: 15px; }
+    .btn-ghost { padding: 9px 14px; font-size: 13px; }
+    .file-btn  { padding: 8px 12px; font-size: 13px; }
+    .clear-upload { font-size: 22px; padding: 4px 8px; }
+
+    /* Let the avatar-pick row breathe; status drops to its own line */
+    .avatar-pick { flex-wrap: wrap; row-gap: 4px; }
+    .avatar-pick .fetch-status { margin-left: 0; flex-basis: 100%; }
+
+    .btn-row { gap: 8px; }
+  }
 </style>
 </head>
 <body>
@@ -450,6 +495,7 @@
   <section class="card preview-wrap" aria-label="Preview">
     <div class="card-head" style="width:100%;">Live preview</div>
     <div class="card-body" style="width:100%; display:flex; flex-direction:column; align-items:center; gap:10px;">
+      <div class="thread-frame">
       <div id="thread">
 
         <!-- Tweet 1 — the budget -->
@@ -506,6 +552,7 @@
           </div>
         </article>
 
+      </div>
       </div>
     </div>
   </section>
@@ -772,7 +819,36 @@
     // Fry-level readout
     const fryName = document.getElementById('fry-name');
     if (fryName) fryName.textContent = currentFryLevel().name;
+
+    // Re-scale the preview if we're on a narrow viewport.
+    fitThread();
   }
+
+  // ---------- mobile preview scaler --------------------------------------
+  // #thread is locked at 507px so the export matches the original tweet
+  // chrome. On viewports narrower than that, we visually scale the preview
+  // with transform: scale(), and clamp the frame's box to the scaled height
+  // so subsequent content sits flush. Export passes transform: 'none' as a
+  // style override so the captured image is always full 507px.
+  function fitThread() {
+    const frame = document.querySelector('.thread-frame');
+    const thread = document.getElementById('thread');
+    if (!frame || !thread) return;
+    // Reset to natural state so we can measure the parent's available width.
+    frame.style.width = '';
+    frame.style.height = '';
+    thread.style.transform = '';
+    const available = frame.clientWidth;
+    const naturalW = 507;
+    if (available >= naturalW) return;
+    const scale = available / naturalW;
+    const naturalH = thread.offsetHeight; // unaffected by transform
+    thread.style.transform = `scale(${scale})`;
+    frame.style.width = (naturalW * scale) + 'px';
+    frame.style.height = (naturalH * scale) + 'px';
+  }
+  window.addEventListener('resize', fitThread);
+  window.addEventListener('orientationchange', fitThread);
 
   // Wire every text/textarea/range input to re-render and update the share URL.
   document.querySelectorAll('input[type=text], textarea, input[type=range]').forEach(el => {
@@ -836,20 +912,37 @@
     }
     const lvl = currentFryLevel();
     const node = document.getElementById('thread');
-    // Pass 1: render the DOM to JPEG with the level's filter baked in.
-    let dataUrl = await window.htmlToImage.toJpeg(node, {
-      pixelRatio: FRY_PIXEL_RATIO,
-      quality: lvl.quality,
-      backgroundColor: '#ffffff',
-      cacheBust: true,
-      style: { filter: lvl.filter },
-    });
-    // Passes 2..N: generation loss. Each roundtrip compounds JPEG ringing
-    // around high-contrast edges (i.e., the text).
-    for (let i = 1; i < lvl.passes; i++) {
-      dataUrl = await reEncodeJpeg(dataUrl, lvl.quality);
+    const frame = node.parentElement;
+    // Belt-and-suspenders: the style override below should be enough, but we
+    // also clear the live mobile-scaling transform so the capture can't pick
+    // up a scaled clone. Restored in finally; the brief visual flash is
+    // masked by the "Frying…" status.
+    const savedTransform = node.style.transform;
+    const savedFrameW = frame.style.width;
+    const savedFrameH = frame.style.height;
+    node.style.transform = '';
+    frame.style.width = '';
+    frame.style.height = '';
+    try {
+      let dataUrl = await window.htmlToImage.toJpeg(node, {
+        pixelRatio: FRY_PIXEL_RATIO,
+        quality: lvl.quality,
+        backgroundColor: '#ffffff',
+        cacheBust: true,
+        // transform: 'none' on the *clone* — primary guard.
+        style: { filter: lvl.filter, transform: 'none' },
+      });
+      // Passes 2..N: generation loss. Each roundtrip compounds JPEG ringing
+      // around high-contrast edges (i.e., the text).
+      for (let i = 1; i < lvl.passes; i++) {
+        dataUrl = await reEncodeJpeg(dataUrl, lvl.quality);
+      }
+      return dataUrl;
+    } finally {
+      node.style.transform = savedTransform;
+      frame.style.width = savedFrameW;
+      frame.style.height = savedFrameH;
     }
-    return dataUrl;
   }
 
   $('#download').addEventListener('click', async () => {
