@@ -350,11 +350,14 @@
             <input type="text" id="handle1" value="dril" />
           </div>
         </div>
-        <div class="row single">
+        <div class="row">
           <div>
             <label for="item">Item (replaces "Candles")</label>
             <input type="text" id="item" value="Candles" />
-            <div class="hint">Price stays $3,600 — that's the joke.</div>
+          </div>
+          <div>
+            <label for="price">Price <span class="hint-inline">(free text — keep the comma)</span></label>
+            <input type="text" id="price" value="$3,600" />
           </div>
         </div>
       </div>
@@ -592,15 +595,14 @@
   });
 
   // ---------- canonical constants from the original dril tweet ----------
-  // 29 Sep 2012, $3,600 — these never change. That's the joke.
-  const DRIL_DATE  = "29 Sep";
-  const DRIL_PRICE = "$3,600";
-  const DRIL_PLEA  = "someone who is good at the economy please help me budget this. my family is dying";
+  // 29 Sep 2012 — date and the closing plea never change.
+  const DRIL_DATE = "29 Sep";
+  const DRIL_PLEA = "someone who is good at the economy please help me budget this. my family is dying";
 
   // ---------- the budget block (canonical Dril list) --------------------
-  function renderBudget(item) {
+  function renderBudget(item, price) {
     const safeItem  = escapeHTML(item || "Candles");
-    const safePrice = escapeHTML(DRIL_PRICE);
+    const safePrice = escapeHTML(price || "$3,600");
     const safePlea  = renderBody(DRIL_PLEA);
     return [
       `<span class="list-line">Food $200</span>`,
@@ -633,7 +635,7 @@
     $('#t1-displayname').textContent = dn1;
     $('#t1-handle').textContent = h1;
     $('#t1-date').textContent = DRIL_DATE;
-    $('#t1-body').innerHTML = renderBudget(item);
+    $('#t1-body').innerHTML = renderBudget(item, $('#price').value);
     const a1 = avatarFor(1, dn1);
     $('#t1-avatar').src = a1;
     $('#avatar1-img').src = a1;
@@ -682,7 +684,7 @@
     [1,2,3].forEach(w => setFetchStatus(w, ''));
     const defaults = {
       displayname1:'wint', handle1:'dril',
-      item:'Candles',
+      item:'Candles', price:'$3,600',
       displayname2:'craig', handle2:'craigus12',
       displayname3:'wint', handle3:'dril',
     };
