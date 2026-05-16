@@ -355,7 +355,7 @@
 
       <!-- Tweet 1 -->
       <div class="group" data-tweet="1">
-        <h3>Tweet 1</h3>
+        <h3>Dril</h3>
         <div class="avatar-pick">
           <div class="preview"><img id="avatar1-img" alt="" /></div>
           <label class="file-btn">
@@ -389,7 +389,7 @@
 
       <!-- Tweet 2 -->
       <div class="group" data-tweet="2">
-        <h3>Tweet 2</h3>
+        <h3>Reply guy</h3>
         <div class="avatar-pick">
           <div class="preview"><img id="avatar2-img" alt="" /></div>
           <label class="file-btn">
@@ -407,30 +407,6 @@
           <div>
             <label for="handle2">@handle <span class="hint-inline">(auto-fetches avatar)</span></label>
             <input type="text" id="handle2" value="craigus12" />
-          </div>
-        </div>
-      </div>
-
-      <!-- Tweet 3 -->
-      <div class="group" data-tweet="3">
-        <h3>Tweet 3</h3>
-        <div class="avatar-pick">
-          <div class="preview"><img id="avatar3-img" alt="" /></div>
-          <label class="file-btn">
-            Choose avatar
-            <input type="file" accept="image/*" data-avatar-for="3" />
-          </label>
-          <button class="clear-upload" id="clear-upload-3" type="button" hidden title="Clear upload, use X profile pic">&times;</button>
-          <span class="fetch-status" id="fetch-status-3"></span>
-        </div>
-        <div class="row">
-          <div>
-            <label for="displayname3">Display name</label>
-            <input type="text" id="displayname3" value="wint" />
-          </div>
-          <div>
-            <label for="handle3">@handle</label>
-            <input type="text" id="handle3" value="dril" />
           </div>
         </div>
       </div>
@@ -543,9 +519,10 @@
 
   // ---------- state ------------------------------------------------------
   // uploaded[] wins over fetched[] wins over placeholder.
+  // Keys are by role: 1 = Dril (used for tweets 1 AND 3), 2 = Reply guy.
   const state = {
-    uploaded: { 1: null, 2: null, 3: null }, // user-picked files (data URIs)
-    fetched:  { 1: null, 2: null, 3: null }, // auto-pulled from X (data URIs)
+    uploaded: { 1: null, 2: null }, // user-picked files (data URIs)
+    fetched:  { 1: null, 2: null }, // auto-pulled from X (data URIs)
   };
   // Cache so retyping a handle we already looked up doesn't refetch.
   const avatarCache = new Map(); // lowercase handle -> data URI or null (404)
@@ -630,7 +607,7 @@
   });
 
   // ---------- clear upload (the × next to each avatar) -------------------
-  [1, 2, 3].forEach(which => {
+  [1, 2].forEach(which => {
     const btn = document.getElementById(`clear-upload-${which}`);
     if (!btn) return;
     btn.addEventListener('click', () => {
@@ -676,7 +653,6 @@
     displayname1: 'wint', handle1: 'dril',
     item: 'Candles',     price: '$3,600',
     displayname2: 'craig', handle2: 'craigus12',
-    displayname3: 'wint',  handle3: 'dril',
     fry: String(FRY_DEFAULT_INDEX),
   };
 
@@ -733,48 +709,46 @@
   function avatarFor(which, fallbackLabel) {
     return state.uploaded[which]
         || state.fetched[which]
-        || (which === 3 ? (state.uploaded[1] || state.fetched[1]) : null)
         || PLACEHOLDER(fallbackLabel);
   }
 
   function render() {
-    const dn1 = ($('#displayname1').value || "").trim() || "you";
-    const dn2 = ($('#displayname2').value || "").trim() || "friend";
-    const dn3 = ($('#displayname3').value || "").trim() || dn1;
-    const h1  = ($('#handle1').value || "").trim().replace(/^@/, '') || "you";
-    const h2  = ($('#handle2').value || "").trim().replace(/^@/, '') || "friend";
-    const h3  = ($('#handle3').value || "").trim().replace(/^@/, '') || h1;
+    const drilName  = ($('#displayname1').value || "").trim() || "you";
+    const replyName = ($('#displayname2').value || "").trim() || "friend";
+    const drilHandle  = ($('#handle1').value || "").trim().replace(/^@/, '') || "you";
+    const replyHandle = ($('#handle2').value || "").trim().replace(/^@/, '') || "friend";
     const item = $('#item').value || "Candles";
 
-    // Tweet 1 — the budget
-    $('#t1-displayname').textContent = dn1;
-    $('#t1-handle').textContent = h1;
+    const drilAvatar  = avatarFor(1, drilName);
+    const replyAvatar = avatarFor(2, replyName);
+
+    // Editor preview thumbnails
+    $('#avatar1-img').src = drilAvatar;
+    $('#avatar2-img').src = replyAvatar;
+
+    // Tweet 1 — the budget (Dril)
+    $('#t1-displayname').textContent = drilName;
+    $('#t1-handle').textContent = drilHandle;
     $('#t1-date').textContent = DRIL_DATE;
     $('#t1-body').innerHTML = renderBudget(item, $('#price').value);
-    const a1 = avatarFor(1, dn1);
-    $('#t1-avatar').src = a1;
-    $('#avatar1-img').src = a1;
+    $('#t1-avatar').src = drilAvatar;
 
-    // Tweet 2 — auto-composed advice
-    $('#t2-displayname').textContent = dn2;
-    $('#t2-handle').textContent = h2;
+    // Tweet 2 — auto-composed advice (Reply guy)
+    $('#t2-displayname').textContent = replyName;
+    $('#t2-handle').textContent = replyHandle;
     $('#t2-date').textContent = DRIL_DATE;
-    $('#t2-body').innerHTML = renderBody(`@${h1} spend less on ${item.toLowerCase()}`);
-    const a2 = avatarFor(2, dn2);
-    $('#t2-avatar').src = a2;
-    $('#avatar2-img').src = a2;
+    $('#t2-body').innerHTML = renderBody(`@${drilHandle} spend less on ${item.toLowerCase()}`);
+    $('#t2-avatar').src = replyAvatar;
 
-    // Tweet 3 — the canonical "no"
-    $('#t3-displayname').textContent = dn3;
-    $('#t3-handle').textContent = h3;
+    // Tweet 3 — the canonical "no" (Dril again, same identity)
+    $('#t3-displayname').textContent = drilName;
+    $('#t3-handle').textContent = drilHandle;
     $('#t3-date').textContent = DRIL_DATE;
-    $('#t3-body').innerHTML = renderBody(`@${h2} no`);
-    const a3 = avatarFor(3, dn3);
-    $('#t3-avatar').src = a3;
-    $('#avatar3-img').src = a3;
+    $('#t3-body').innerHTML = renderBody(`@${replyHandle} no`);
+    $('#t3-avatar').src = drilAvatar;
 
     // Show the × clear-upload button only when a manual upload exists.
-    [1, 2, 3].forEach(w => {
+    [1, 2].forEach(w => {
       const btn = document.getElementById(`clear-upload-${w}`);
       if (btn) btn.hidden = !state.uploaded[w];
     });
@@ -790,7 +764,7 @@
   });
 
   // Handle-name inputs additionally trigger debounced avatar fetch.
-  [1, 2, 3].forEach(which => {
+  [1, 2].forEach(which => {
     const el = document.getElementById(`handle${which}`);
     el.addEventListener('input', () => {
       // A new handle invalidates any previously-fetched avatar.
@@ -803,17 +777,17 @@
   $('#reset-link').addEventListener('click', e => {
     e.preventDefault();
     if (!confirm('Reset all fields back to the canonical dril original?')) return;
-    state.uploaded = { 1: null, 2: null, 3: null };
-    state.fetched  = { 1: null, 2: null, 3: null };
+    state.uploaded = { 1: null, 2: null };
+    state.fetched  = { 1: null, 2: null };
     document.querySelectorAll('input[type=file]').forEach(i => i.value = '');
-    [1,2,3].forEach(w => setFetchStatus(w, ''));
+    [1, 2].forEach(w => setFetchStatus(w, ''));
     Object.entries(DEFAULTS).forEach(([k,v]) => {
       const el = document.getElementById(k);
       if (el) el.value = v;
     });
     render();
     updateURL();
-    [1,2,3].forEach(scheduleAvatarFetch);
+    [1, 2].forEach(scheduleAvatarFetch);
   });
 
   // ---------- export -----------------------------------------------------
@@ -936,7 +910,7 @@
   // Hydrate fields from the URL first so we render the shared state.
   readURLState();
   render();
-  [1, 2, 3].forEach(scheduleAvatarFetch);
+  [1, 2].forEach(scheduleAvatarFetch);
 })();
 </script>
 </body>
