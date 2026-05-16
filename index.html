@@ -162,7 +162,23 @@
     text-shadow: 0 1px 0 rgba(255,255,255,0.6);
   }
   .file-btn:hover { background: linear-gradient(to bottom, #fff 0%, #ddd 100%); }
-  .file-btn input { display: none; }
+  .file-btn:focus-within {
+    outline: none;
+    border-color: var(--tw-blue);
+    box-shadow: 0 0 4px rgba(0,132,180,0.45);
+  }
+  /* Visually hide the file input but keep it focusable + screen-reader-readable. */
+  .file-btn input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
   .hint { font-size: 11px; color: var(--tw-muted); margin-top: 2px; }
   .hint-inline { font-weight: 400; color: var(--tw-muted); font-size: 10px; }
   .fetch-status { font-size: 11px; color: var(--tw-muted); margin-left: auto; }
