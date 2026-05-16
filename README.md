@@ -4,7 +4,7 @@ A loving tribute to [@dril's budget tweet](https://x.com/dril/status/38440893206
 
 ## Live
 
-→ **https://bojanrajkovic.github.io/candles-meme-generator/** (set this after Pages deploys)
+→ **https://bojanrajkovic.github.io/candles-meme-generator/**
 
 ## What it does
 
